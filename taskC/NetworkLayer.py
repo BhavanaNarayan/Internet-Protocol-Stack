@@ -47,6 +47,8 @@ def l3_sendto (client_socket=None, nid=None, datagram=None):
   is this function used--rather, this layer purely uses l2_sendto from 
   the LinkLayer module.
   """
+  packet = Datagram(nid, 5, datagram)
+  return packet
   pass
   
 
