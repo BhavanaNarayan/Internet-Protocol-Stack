@@ -41,24 +41,37 @@ def ResolveNID (nid=None, node=None):
       return entry[1]
 
 
-def l3_sendto (client_socket=None, nid=None, datagram=None):
+def l3_sendto (source_nid, source_port, destination_nid, destination_port, node = None, DVRP=None, payload=None):
   """
   This function will be used in Layer 4, the Transport layer. Nowhere in this Layer 3
   is this function used--rather, this layer purely uses l2_sendto from 
   the LinkLayer module.
   """
-  packet = Datagram(nid, 5, datagram)
-  return packet
+  datagram = Datagram(source_nid, source_port, destination_nid, destination_port, payload)
+  frame = Frame(node.GetNID(), node.GetPort(), destination_nid, destination_port, datagram)
+  L2_sendto(DVRP.GetRoutingTable()[destination_nid], frame) 
   pass
   
 
-def l3_recvfrom (client_socket=None):
+def l3_recvfrom (datagram, node=None):
   """
   This function will be used in Layer 4, the Transport layer. Nowhere in this Layer 3
   is this function used--rather, this layer purely uses l2_recvfrom from 
   the LinkLayer module.
   """
-  pass
+  destination_nid = datagram.GetDestinationNID()
+  destination_port = datagram.GetDestinationPort()
+  if destination_nid == node.GetNID():
+    if destination_port == node.GetPort():
+      data = datagram.GetPayload()
+      l4_recvfrom(data)
+      # pass data to app to save
+    else:
+      print("Error: bad port number -- ", destination_port)
+  else:
+    if datagram.GetTTL() >= 1:
+      datagram.DecreaseTTL()
+      l2_sendto(node,destination_nid, destination_port, datagram.GetPayload())  
 
 
 # We are not using inheritance beacuse inheritance does not meet our goals.
@@ -69,10 +82,16 @@ class Datagram (object):
   Notes: We need to include the MTU (for fragmentation and reassembly), TTL,
     payload = Frame. The TTL will be decremented after each hop.
   """
-  def __init__ (self, mtu=0, ttl=5, payload=None):
+  def __init__ (self, source_nid, source_port, destination_nid, destination_port, payload=None):
     self._mtu = mtu
-    self._ttl = ttl
+    self._ttl = 20
     self._payload = payload
+    self._source_nid = source_nid
+    self._source_port = source_port
+    self._destination_nid = destination_nid
+    self._destination_port = destination_port
+    
+    
   
   
   def GetMTU (self):
@@ -95,8 +114,11 @@ class Datagram (object):
     
   def SetTTL (self, ttl):
     self._ttl = ttl
+
+  def DecreaseTTL (self, ttl):
+    self._ttl = self._ttl -1
+
     
-  
   # WE MIGHT NEED TO CHANGE THIS DRASTICALLY.
   def SetPayload (self, payload):
     self._payload = payload

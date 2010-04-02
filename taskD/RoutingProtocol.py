@@ -48,11 +48,9 @@ def ComputeShortestPath (node, source_NID, destination_NID, via_NID=0):
   if destination_NID == source_NID:
     return destination_NID, 1
   elif ComputeShortestPath(node, link_table[source_NID][0], destination_NID, link_table[source_NID][0]) >= ComputeShortestPath(node, link_table[source_NID][1], destination_NID, link_table[source_NID][1]):
-    return (ComputeShortestPath(node, link_table[source_NID][1], destination_NID, link_table[source_NID][0]), 
-            ComputeShortestPath(node, link_table[source_NID][1], destination_NID, link_table[source_NID][1]) + 1)
+    return (link_table[source_NID][1], ComputeShortestPath(node, link_table[source_NID][1], destination_NID, link_table[source_NID][1]) + 1)
   else:
-    return (ComputeShortestPath(node, link_table[source_NID][0], destination_NID, link_table[source_NID][0]), 
-            ComputeShortestPath(node, link_table[source_NID][0], destination_NID, link_table[source_NID][1]) + 1)          
+    return (link_table[source_NID][0], ComputeShortestPath(node, link_table[source_NID][0], destination_NID, link_table[source_NID][1]) + 1)          
   
   
 def Converge (node, link_from_node, link_to_node, link_change=0):
