@@ -22,8 +22,9 @@ import Node
 
 
 def InitializeSocket (node=None):
-  ip = node.GetHostName()
-  ip = socket.gethostbyname(ip)
+  hostname = node.GetHostName()
+  # Resolve the IP address.
+  ip = socket.gethostbyname(hostname)
   port = node.GetPort()
   
   client_address = (ip, port)
@@ -31,10 +32,7 @@ def InitializeSocket (node=None):
   client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
   # Set any socket options pertaining to multicast.
   client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-  # Make this a non-blocking socket. If a recv() call doesn't find any data, then 
-  # an exception is raised. If send() doesn't immediately have any data to send, 
-  # then an exception is also raised.
-  client_socket.setblocking(0)
+  client_socket.bind(client_address)
   
   return client_address, client_socket
   
@@ -93,27 +91,33 @@ def l2_recvfrom (client_socket=None, node=None):
   This function will be used in Layer 3, the Network layer. Nowhere in this Layer 2
   is this function used--rather, this layer purely uses good ol' UDP recvfrom.
   """
-  data = ''.encode()
-  buffer = ''.encode()
-  mtu = node.GetMTU()
-  
-  # Read a bunch of bytes up to the MTU.
-  while len(data) <= mtu:
-    buffer, external_address = client_socket.recvfrom(mtu-len(data))
-    if buffer:
-      data += buffer
-      
-    # This is our protocol. Stop reading when we see \r\n.
-    if '\r\n'.encode() in buffer:
-      break
-  
-  # Here, the source is coming from an external address, meaning we are receiving a packet.
-  # Notice we are using node.GetSourceIP and node.GetSourcePort. These are relating 
-  # to the localhost (our machine), which in this case is the destination address of this 
-  # particular frame.
-  frame = Frame.Frame(external_address[0], external_address[1], node.GetSourceIP(), 
-                      node.GetSourcePort(), len(buffer), buffer)
-  return frame, external_address
+  while 1:
+    data = ''.encode()
+    buffer = ''.encode()
+    mtu = node.GetMTU()
+    
+    # Read a bunch of bytes up to the MTU or length of data.
+    while len(data) <= mtu:
+      buffer, external_address = client_socket.recvfrom(mtu-len(data))
+      if buffer:
+        data += buffer
+      else:
+        #thread.interrupt_main()
+        break
+        
+      # This is our protocol. Stop reading when we see \r\n.
+      if '\r\n'.encode() in buffer:
+        #thread.interrupt_main()
+        break
+    
+    # Here, the source is coming from an external address, meaning we are receiving a packet.
+    # Notice we are using node.GetSourceIP and node.GetSourcePort. These are relating 
+    # to the localhost (our machine), which in this case is the destination address of this 
+    # particular frame.
+    source_ip = socket.gethostbyname(node.GetHostName())
+    frame = Frame(external_address[0], external_address[1], source_ip, 
+                  node.GetPort(), len(buffer), buffer)
+    return (frame, external_address)
 
 
 class Frame (object):
@@ -140,7 +144,7 @@ class Frame (object):
   NOTE: Layer 3 will reference NIDs instead of IPs.
   """
   def __init__ (self, source_ip='localhost', source_port=5555, 
-                dest_ip='localhost', dest_port=5556, payload=None):
+                dest_ip='localhost', dest_port=5555, length=0, payload=None):
     self._source_ip = source_ip
     self._source_port = source_port
     self._dest_ip = dest_ip
