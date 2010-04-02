@@ -117,7 +117,7 @@ def l2_recvfrom (client_socket=None, node=None):
     source_ip = socket.gethostbyname(node.GetHostName())
     frame = Frame(external_address[0], external_address[1], source_ip, 
                   node.GetPort(), len(buffer), buffer)
-    return (frame, external_address)
+    return frame, external_address
 
 
 class Frame (object):
