@@ -18,7 +18,10 @@ import sys        # Basic system functionality.
 import threading  # Higher-level threading interface.
 
 sys.path.append('../taskA')
+sys.path.append('../taskC')
+
 import Node
+import NetworkLayer
 
 
 def InitializeSocket (node=None):
@@ -37,10 +40,10 @@ def InitializeSocket (node=None):
   return client_address, client_socket
   
   
-def l2_sendto (client_socket=None, hostname=None, frame=None, node=None):
+def l2_sendto (client_socket=None, hostname=None, datagram=None, node=None):
   """
-  This function will be used in Layer 3, the Network layer. Nowhere in this Layer 2
-  is this function used--rather, this layer purely uses good ol' UDP sendto.
+  This function expects a Datagram passed from Layer 3. It will pack Frame-related 
+  stuff onto this, thus making all the Datagram stuff our Frame's payload.
   
   There are several states within this function.
   
@@ -61,21 +64,57 @@ def l2_sendto (client_socket=None, hostname=None, frame=None, node=None):
     for entry in node.GetLinks():
       if hostname in entry:
         # -2 for \r\n, which is appended in send() and recv() functions.
-        if len(frame.GetPayload()) >= node.GetMTU() - 2:
+        if datagram.GetLength() >= datagram.GetMTU() - 2:
           print('Cannot send over wire. Payload > MTU of the link.')
-        elif len(frame.GetPayload()) <= node.GetMTU() - 2:
+        elif datagram.GetLength() <= node.GetMTU() - 2:
           # Resolve host name by doing host name -> ip address. Then include the port.
           # Unless the destination port was previous explicitly changed, it will use the 
-          # default of port # 5556.
-          dest_address = (socket.gethostbyname(hostname), frame.GetDestPort())
-          # Make sure it is the same as the Frame.
-          frame.SetDestIP(dest_address[0])
-          # Prepare our string to send over the wire.
-          payload = frame.GetPayload()
-          payload += '\r\n'
-          frame.SetPayload(payload)
+          # default of port # 5555.
+          dest_address = (socket.gethostbyname(hostname), datagram.GetDestPort())
+          source_address = (socket.gethostbyname(node.GetHostName()), node.GetPort())
+          
+          # Set Frame headers
+          frame = Frame(source_address[0], source_address[1], dest_address[0], dest_address[1])
+          # Take the Datagram, make it the payload of the Frame.
+          # Create the Frame and set its headers then send it over UDP.
+          d_sequence_number = str(datagram.GetSequenceNumber())
+          d_total_sequence_numbers = str(datagram.GetTotalSequenceNumbers())
+          d_mtu = str(datagram.GetMTU())
+          d_ttl = str(datagram.GetTTL())
+          d_source_nid = str(datagram.GetSourceNID())
+          d_source_port = str(datagram.GetSourcePort())
+          d_dest_nid = str(datagram.GetDestNID())
+          d_dest_port = str(datagram.GetDestPort())
+          d_length = str(datagram.GetLength())
+          datagram_payload = datagram.GetPayload()
+          
+          # The '@@' symbols are delimeters to distinguish between different packet payloads.
+          # Each @@ will separate the Segment, Datagram, and Frame headers and payload stuff.
+          # We will use string.split('@@') to determine which portion of the payload we 
+          # will work with.
+          #
+          # We need to add a '\r\n' at the end so we can know when to stop reading.
+          
+          f_source_ip = str(frame.GetSourceIP())
+          f_source_port = str(frame.GetSourcePort())
+          f_dest_ip = str(frame.GetDestIP())
+          f_dest_port = str(frame.GetDestPort())
+          
+          frame_payload = d_sequence_number + '@' + d_total_sequence_numbers + '@' + \
+                          d_mtu + '@' + d_ttl + '@' + d_source_nid + '@' + d_source_port + '@' + \
+                          d_dest_nid + '@' + d_dest_port + '@' + d_length + '@@' + datagram_payload
+          
+          to_wire = f_source_ip + '@' + f_source_port + '@' + f_dest_ip + '@' + \
+                    f_dest_port + '@' + str(len(frame_payload)) + '@@' + frame_payload
+                          
+          
+          
+          # Now that we have created the frame payload, we call SetPayload to finish creating 
+          # our Frame so we can prepare to send it over the wire.
+          frame.SetPayload(frame_payload)
+
           # Now send it over the wire. Don't forget to encode to a byte string.
-          client_socket.sendto(frame.GetPayload().encode(), dest_address)
+          client_socket.sendto(to_wire.encode(), dest_address)
         # Break out of the 'for' loop.
         break
       else:
@@ -84,9 +123,11 @@ def l2_sendto (client_socket=None, hostname=None, frame=None, node=None):
         break
   else:
     print('No host name specified for l2_sendto.')
+    
+  return to_wire
   
 
-def l2_recvfrom (client_socket=None, node=None):
+def l2_recvfrom (client_socket=None):
   """
   This function will be used in Layer 3, the Network layer. Nowhere in this Layer 2
   is this function used--rather, this layer purely uses good ol' UDP recvfrom.
@@ -94,11 +135,10 @@ def l2_recvfrom (client_socket=None, node=None):
   while 1:
     data = ''.encode()
     buffer = ''.encode()
-    mtu = node.GetMTU()
     
     # Read a bunch of bytes up to the MTU or length of data.
-    while len(data) <= mtu:
-      buffer, external_address = client_socket.recvfrom(mtu-len(data))
+    while len(data) <= 4096:
+      buffer, external_address = client_socket.recvfrom(4096-len(data))
       if buffer:
         data += buffer
       else:
@@ -110,14 +150,26 @@ def l2_recvfrom (client_socket=None, node=None):
         #thread.interrupt_main()
         break
     
-    # Here, the source is coming from an external address, meaning we are receiving a packet.
-    # Notice we are using node.GetSourceIP and node.GetSourcePort. These are relating 
-    # to the localhost (our machine), which in this case is the destination address of this 
-    # particular frame.
-    source_ip = socket.gethostbyname(node.GetHostName())
-    frame = Frame(external_address[0], external_address[1], source_ip, 
-                  node.GetPort(), len(buffer), buffer)
-    return frame, external_address
+    # Split the headers.
+    packet = data.decode().split('@@')
+    frame_header = packet[0].split('@')
+    datagram_header = packet[1].split('@')    
+    
+    # Now we should have something like [Frame, Datagram, Segment].
+    # Step 1. Build a new Frame.
+    frame = Frame(frame_header[0], frame_header[1], frame_header[2], frame_header[3], 
+                            frame_header[4], packet[1])
+                            
+    # Step 2. Build a new Datagram so we can pass it to l3_recvfrom().
+    datagram = NetworkLayer.Datagram(datagram_header[0], datagram_header[1], datagram_header[2], 
+                            datagram_header[3], datagram_header[4], datagram_header[5], 
+                            datagram_header[6], datagram_header[7], datagram_header[8], 
+                            packet[2])
+    
+    # l3_recvfrom will return something, but right now, we are not storing that value yet.
+    #NetworkLayer.l3_recvfrom(datagram)
+    
+    return len(buffer), frame, datagram, external_address
 
 
 class Frame (object):

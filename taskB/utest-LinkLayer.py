@@ -17,17 +17,20 @@ import thread
 import Queue
 
 sys.path.append('../taskA')
+sys.path.append('../taskC')
+
 import Node
 import LinkLayer
+import NetworkLayer
 
 
 class TestNodeFunctions (unittest.TestCase):
   def test_InitializeSocket (self):
     node = Node.Node(1, 'localhost', 5555)
     #print(node)
-    client_address, client_socket = LinkLayer.InitializeSocket(node)
+    #client_address, client_socket = LinkLayer.InitializeSocket(node)
     #print(client_socket)
-    client_socket.close()
+    #client_socket.close()
   
   
   def test_FrameStuff (self):
@@ -35,48 +38,24 @@ class TestNodeFunctions (unittest.TestCase):
     #print(some_frame)
     
  
-  def test_l2_recvfrom (self):
-    #addr = ''
-    #frame_queue = Queue.Queue()
-    #external_address_queue = Queue.Queue()
-    
-    # To use receive from, we go like this:
-    # frame, external_address = LinkLayer.l2
+  def test_communications (self):
     node = Node.Node(1, 'localhost', 5555)
     node.SetMTU(1500)
     node.AddLink((2, 'localhost', 1))
     node.AddLink((3, 'localhost', 1))
     client_address, client_socket = LinkLayer.InitializeSocket(node)
-    #print(client_address, client_socket.getsockname())
-    some_frame = LinkLayer.Frame()
-    some_frame.SetPayload('This is a payload.')
-    #node.PrintContents()
-    #some_frame.PrintContents()
-    LinkLayer.l2_sendto(client_socket, 'localhost', some_frame, node)
-    
-    #frame_queue.put(result)
-    #external_address_queue.put(addr)
-    #thread_id = thread.start_new_thread(LinkLayer.l2_recvfrom, (client_socket, node))
-    #frame = frame_queue.get()
-    #external_address = external_address_queue.get()
-    frame, external_address = LinkLayer.l2_recvfrom(client_socket, node)
-    frame.PrintContents()
-    #LinkLayer.l2_sendto(client_socket, 'localhost', some_frame, node)
-    client_socket.close()
-    pass
-  
-  
-  def test_l2_sendto (self):
-    # To use l2_sendto, we go like this:
-    # <will add this tomorrow, April 02, 2010>
-    node = Node.Node(1, 'localhost', 5556)
-    node.SetMTU(1500)
-    node.AddLink((2, 'localhost', 1))
-    node.AddLink((3, 'localhost', 1))
-    client_address, client_socket = LinkLayer.InitializeSocket(node)
-    some_frame = LinkLayer.Frame()
-    some_frame.SetPayload('This is a payload.')
-    LinkLayer.l2_sendto(client_socket, 'localhost', some_frame, node)
+    datagram = NetworkLayer.Datagram()
+    datagram.SetMTU(node.GetMTU())
+    # YOU MUST PUT THE \r\n IN HERE OR IT WILL NOT WORK.
+    datagram.SetPayload('This is a payload.\r\n')
+    what_was_sent = LinkLayer.l2_sendto(client_socket, 'localhost', datagram, node)
+    #print(what_was_sent)
+    length_of_buffer, received_frame, datagram_to_pass, external_address = LinkLayer.l2_recvfrom(client_socket)
+    print(length_of_buffer)
+    received_frame.PrintContents()
+    if received_frame.GetLength() > 0:
+    datagram_to_pass.PrintContents()
+    print(external_address)
     client_socket.close()
     
 
