@@ -36,6 +36,16 @@ def MoreReliabilityStuff ():
   pass
   
 
+# I (Jeff) will write this by tonight.
+def l4_sendto (client_socket, destination_nid, destination_port, message=None, node=None):
+  pass
+  
+
+# I (Jeff) will write this by tonight.
+def l4_recvfrom(client_socket, segment, node=None):
+  pass
+  
+
 class Segment (object):
   # From Jeff, @Paul: 
   #

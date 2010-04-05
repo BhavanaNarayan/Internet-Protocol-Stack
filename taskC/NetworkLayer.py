@@ -41,7 +41,7 @@ def ResolveNID (nid=None, node=None):
       return entry[1]
 
 
-def l3_sendto (client_socket, destination_nid, destination_port, DVRP=None, payload=None, node=None):
+def l3_sendto (client_socket, destination_nid, destination_port, DVRP=None, segment=None, node=None):
   """
   This function will be used in Layer 4, the Transport layer. Nowhere in this Layer 3
   is this function used--rather, this layer purely uses l2_sendto from 
@@ -54,13 +54,13 @@ def l3_sendto (client_socket, destination_nid, destination_port, DVRP=None, payl
   dest_hostname = ResolveNID(destination_nid)
   dest_hostname = socket.gethostbyname(dest_hostname)
   
-  while len(payload) > mtu:
-    temp_payload = payload[:mtu-1]
+  while len(segment) > mtu:
+    temp_segment = segment[:mtu-1]
     datagram = Datagram(sequence_number, total_sequence_numbers, mtu, 10, 
                         node.GetNID(), node.GetPort(), 
-                        destination_nid, destination_port, temp_payload)
+                        destination_nid, destination_port, temp_segment)
     to_wire = LinkLayer.l2_sendto(client_socket, dest_hostname, datagram, node)
-    payload = payload[mtu:]
+    segment = segment[mtu:]
     sequence_number += 1
     total_sequence_numbers += 1
   
