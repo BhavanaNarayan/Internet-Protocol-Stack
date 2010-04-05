@@ -29,7 +29,20 @@ import TransportLayer
 
 
 class TestNodeFunctions (unittest.TestCase):
-  pass
+  def test_communications (self):
+    node = Node.Node(1, 'localhost', 5555)
+    routing_table = RoutingProtocol.DVRP(node)
+    # YOU NEED THE \r\n IN HERE.
+    segment = 'This is a payload.\r\n'
+    
+    node.SetMTU(1500)
+    node.AddLink((1, 'localhost', 1))  # A link to itself...
+    node.AddLink((2, 'localhost', 1))
+    node.AddLink((3, 'localhost', 1))
+    client_address, client_socket = LinkLayer.InitializeSocket(node)
+    what_was_sent = TransportLayer.l4_sendto(client_socket, 1, 5555, routing_table, segment, node)
+    print(what_was_sent)
+    # Receive it.
     
 
 if __name__ == '__main__':

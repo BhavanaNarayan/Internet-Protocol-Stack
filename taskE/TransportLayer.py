@@ -44,6 +44,7 @@ def l4_sendto (client_socket, destination_nid, destination_port, DVRP=None, mess
   what_was_sent = NetworkLayer.l3_sendto(client_socket, 
                                          destination_nid, destination_port, 
                                          DVRP, message, node)
+  return what_was_sent
   
 
 # I (Jeff) will write this by tonight.
