@@ -53,7 +53,8 @@ class TestNodeFunctions (unittest.TestCase):
     length_of_buffer, received_frame, datagram_to_pass, external_address = LinkLayer.l2_recvfrom(client_socket)
     print(length_of_buffer)
     received_frame.PrintContents()
-    if received_frame.GetLength() > 0:
+    #if received_frame.GetLength() > 0:
+    #  pass # We need to deal with Layer 3 send here.
     datagram_to_pass.PrintContents()
     print(external_address)
     client_socket.close()

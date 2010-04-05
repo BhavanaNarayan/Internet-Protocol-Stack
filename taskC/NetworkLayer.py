@@ -47,28 +47,32 @@ def l3_sendto (client_socket, destination_nid, destination_port, DVRP=None, segm
   is this function used--rather, this layer purely uses l2_sendto from 
   the LinkLayer module.
   """
-  next_hop = DVRP.GetRoutingTable()[destination_nid]
+  #next_hop = DVRP.GetRoutingTable()[destination_nid]
   mtu = node.GetMTU()
   sequence_number = 1
   total_sequence_numbers = 1
-  dest_hostname = ResolveNID(destination_nid)
-  dest_hostname = socket.gethostbyname(dest_hostname)
+  dest_hostname = ResolveNID(destination_nid, node)
+  #dest_hostname = socket.gethostbyname(dest_hostname)
   
   while len(segment) > mtu:
     temp_segment = segment[:mtu-1]
     datagram = Datagram(sequence_number, total_sequence_numbers, mtu, 10, 
                         node.GetNID(), node.GetPort(), 
                         destination_nid, destination_port, temp_segment)
-    to_wire = LinkLayer.l2_sendto(client_socket, dest_hostname, datagram, node)
+              
+    what_was_sent = LinkLayer.l2_sendto(client_socket, dest_hostname, datagram, node)
     segment = segment[mtu:]
     sequence_number += 1
     total_sequence_numbers += 1
   
-  if len(payload) > 0:
+  if len(segment) > 0:
     datagram = Datagram(sequence_number, total_sequence_numbers, mtu, 10, 
                         node.GetNID(), node.GetPort(), 
-                        destination_nid, destination_port, payload)
-    to_wire = LinkLayer.l2_sendto(client_socket, dest_hostname, datagram, node)
+                        destination_nid, destination_port, len(segment), segment)
+              
+    what_was_sent = LinkLayer.l2_sendto(client_socket, dest_hostname, datagram, node)
+    
+  return what_was_sent
   
 
 def l3_recvfrom (client_socket, datagram, node=None):
@@ -113,8 +117,8 @@ class Datagram (object):
     payload = Frame. The TTL will be decremented after each hop.
   """
   def __init__ (self, sequence_number=1, total_sequence_numbers=1, mtu=0, ttl=10, 
-                source_nid='1', source_port=5555, 
-                destination_nid='1', destination_port=5555, 
+                source_nid=1, source_port=5555, 
+                destination_nid=1, destination_port=5555, 
                 length=0, payload=None):
     self._sequence_number = sequence_number
     self._total_sequence_numbers = total_sequence_numbers

@@ -86,7 +86,7 @@ def l2_sendto (client_socket=None, hostname=None, datagram=None, node=None):
           d_dest_nid = str(datagram.GetDestNID())
           d_dest_port = str(datagram.GetDestPort())
           d_length = str(datagram.GetLength())
-          datagram_payload = datagram.GetPayload()
+          datagram_payload = datagram.GetPayload()    # This will be Segment headers and stuff. But for now, it is a string.
           
           # The '@@' symbols are delimeters to distinguish between different packet payloads.
           # Each @@ will separate the Segment, Datagram, and Frame headers and payload stuff.
@@ -100,6 +100,7 @@ def l2_sendto (client_socket=None, hostname=None, datagram=None, node=None):
           f_dest_ip = str(frame.GetDestIP())
           f_dest_port = str(frame.GetDestPort())
           
+          # We will have to do Segment_payload stuff here as well when the time comes.
           frame_payload = d_sequence_number + '@' + d_total_sequence_numbers + '@' + \
                           d_mtu + '@' + d_ttl + '@' + d_source_nid + '@' + d_source_port + '@' + \
                           d_dest_nid + '@' + d_dest_port + '@' + d_length + '@@' + datagram_payload
