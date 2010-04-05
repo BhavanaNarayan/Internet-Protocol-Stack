@@ -101,21 +101,7 @@ def l3_recvfrom (client_socket, datagram, node=None):
     # Step 1. If TTL is 0, then drop, else, decrease
     if new_datagram.GetTTL() > 0:
       new_datagram.DecreaseTTL()
-      # TODO: Consider reassembly issues with MTU. (possibly up there ---^ Line 93).
-  
-#  destination_nid = datagram.GetDestNID()
-#  destination_port = datagram.GetDestPort()
-#  if destination_nid == node.GetNID():
-#    if destination_port == node.GetPort():
-#      data = datagram.GetPayload()
-#      l4_recvfrom(data)
-#      # pass data to app to save
-#    else:
-#      print("Error: bad port number -- ", destination_port)
-#  else:
-#    if datagram.GetTTL() >= 1:
-#      datagram.DecreaseTTL()
-#      l2_sendto(node,destination_nid, destination_port, datagram.GetPayload())  
+      # TODO: Consider reassembly issues with MTU. (possibly up there ---^ Line 93). 
 
 
 # We are not using inheritance beacuse inheritance does not meet our goals.
