@@ -38,7 +38,7 @@ def ConfigInitialNetworkTopology (script, nid):
   for entry in list:
     temp = entry.split(' ')
     # Temporarily assuming we only have 2 links.
-    node.SetGlobalLinkTable(temp[0], (temp[3], temp[4]))
+    node.SetGlobalLinkTable(int(temp[0]), (int(temp[3]), int(temp[4])))
 
     if node.GetNID() == int(temp[0]):
       node.SetHostName(temp[1])
@@ -185,3 +185,4 @@ class Node(object):
     print(self._links)
     print(self._mtu)
     print(self._shutdown)
+    print(self._global_link_table)

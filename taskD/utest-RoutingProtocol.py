@@ -25,6 +25,7 @@ import RoutingProtocol
 class TestNodeFunctions (unittest.TestCase):
   def test_DVRP__init__ (self):
     node = Node.ConfigInitialNetworkTopology('itc_test.txt', 1)
+    node.PrintContents()
     dvrp = RoutingProtocol.DVRP(node)
     
 

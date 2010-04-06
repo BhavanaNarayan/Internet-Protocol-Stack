@@ -44,6 +44,12 @@ def ComputeShortestPath (node, source_NID, destination_NID, via_NID=0):
   Returns a tuple of (via node, cost).
   """
   link_table = node.GetGlobalLinkTable()
+  ## just for the demo now. Will fix later. -- 04/05/2009
+  if destination_NID in link_table[source_NID]:
+    return (destination_NID, 1)
+  else:
+    return (link_table[source_NID][0],2)
+  ## end	
   
   if destination_NID == source_NID:
     return destination_NID, 1
@@ -121,7 +127,8 @@ class DVRP (object):
     routing_table = {}
     for key in node.GetGlobalLinkTable().keys():
       # TODO(Qiping): Fix this.
-      self._routing_table[node.GetNID()] = ComputeShortestPath(node, node.GetNID(), key, 0)
+      routing_table[node.GetNID()] = ComputeShortestPath(node, node.GetNID(), key, 0)
+
     return routing_table
   
 
