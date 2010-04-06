@@ -126,7 +126,7 @@ def l2_sendto (client_socket=None, hostname=None, datagram=None, node=None):
     print('No host name specified for l2_sendto.')
   
 
-def l2_recvfrom (client_socket=None):
+def l2_recvfrom (client_socket=None, node=None):
   """
   This function will be used in Layer 3, the Network layer. Nowhere in this Layer 2
   is this function used--rather, this layer purely uses good ol' UDP recvfrom.
@@ -156,19 +156,22 @@ def l2_recvfrom (client_socket=None):
     
     # Now we should have something like [Frame, Datagram, Segment].
     # Step 1. Build a new Frame.
-    frame = Frame(frame_header[0], frame_header[1], frame_header[2], frame_header[3], 
-                            frame_header[4], packet[1])
+    frame = Frame(frame_header[2], int(frame_header[3]), frame_header[0], int(frame_header[1]), 
+                            int(frame_header[4]), packet[1])
                             
     # Step 2. Build a new Datagram so we can pass it to l3_recvfrom().
-    datagram = NetworkLayer.Datagram(datagram_header[0], datagram_header[1], datagram_header[2], 
-                            datagram_header[3], datagram_header[4], datagram_header[5], 
-                            datagram_header[6], datagram_header[7], datagram_header[8], 
+    # The order goes 6, 7, then 4, 5 because 6/7 is the destination of this packet, which is 
+    # destined for where the source is. It's backwards since we are receiving, not sending.
+    datagram = NetworkLayer.Datagram(int(datagram_header[0]), int(datagram_header[1]), int(datagram_header[2]), 
+                            int(datagram_header[3]), int(datagram_header[6]), int(datagram_header[7]), 
+                            int(datagram_header[4]), int(datagram_header[5]), int(datagram_header[8]), 
                             packet[2])
     
     # l3_recvfrom will return something, but right now, we are not storing that value yet.
     #NetworkLayer.l3_recvfrom(datagram)
     
-    return len(buffer), frame, datagram, external_address
+    return len(buffer), frame, datagram, external_address, \
+           NetworkLayer.l3_recvfrom(client_socket, str(packet[1]+'@@'+packet[2]), node)
 
 
 class Frame (object):

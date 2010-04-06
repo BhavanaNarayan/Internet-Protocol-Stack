@@ -18,10 +18,12 @@ import threading  # Higher-level threading interface.
 sys.path.append('../taskA')
 sys.path.append('../taskB')
 sys.path.append('../taskD')
+sys.path.append('../taskE')
 
 import Node
 import LinkLayer
 import RoutingProtocol
+import TransportLayer
 
 
 def ResolveNID (nid=None, node=None):
@@ -88,19 +90,24 @@ def l3_recvfrom (client_socket, datagram, node=None):
   
   # Now we should have something like [Datagram, Segment].
   # Step 1. Build a new Datagram.
-  new_datagram = Datagram(datagram_header[0], datagram_header[1], datagram_header[2], 
-                 datagram_header[3], datagram_header[4], datagram_header[5], 
-                 datagram_header[6], datagram_header[7], datagram_header[8], 
+  new_datagram = Datagram(int(datagram_header[0]), int(datagram_header[1]), int(datagram_header[2]), 
+                 int(datagram_header[3]), int(datagram_header[6]), int(datagram_header[7]), 
+                 int(datagram_header[4]), int(datagram_header[5]), int(datagram_header[8]), 
                  packet[1])
   
   # If it's at the destination node...
-  if int(datagram_header[6]) == node.GetNID():
+  if int(datagram_header[4]) == node.GetNID():
+    print('yessssss')
+    # If total_sequence_numbers > 1 then wait for the other segments to arrive?
+    # How would we do this? Call l2_recvfrom again?
     #segment = RTP.Segment(A BUNCH OF SEGMENT HEADERS)
-    # Reassemble packets.
+    # Reassemble packets and build the segment.
+    new_segment = TransportLayer.Segment()
+    new_segment.SetPayload(segment_header)
     
-    # Call l4_sendto
-    #RTP.l4_sendto(segment)
-    return # len(packet), new_datagram, segment
+    # Call l4_recvfrom
+    #print(new_segment)
+    return TransportLayer.l4_recvfrom(client_socket, new_segment, node)
   else:
     # Step 1. If TTL is 0, then drop, else, decrease
     if new_datagram.GetTTL() > 0:
@@ -120,6 +127,7 @@ class Datagram (object):
                 source_nid=1, source_port=5555, 
                 destination_nid=1, destination_port=5555, 
                 length=0, payload=None):
+    # You might need a key.
     self._sequence_number = sequence_number
     self._total_sequence_numbers = total_sequence_numbers
     self._mtu = mtu

@@ -49,14 +49,15 @@ class TestNodeFunctions (unittest.TestCase):
     # YOU MUST PUT THE \r\n IN HERE OR IT WILL NOT WORK.
     datagram.SetPayload('This is a payload.\r\n')
     what_was_sent = LinkLayer.l2_sendto(client_socket, 'localhost', datagram, node)
-    #print(what_was_sent)
-    length_of_buffer, received_frame, datagram_to_pass, external_address = LinkLayer.l2_recvfrom(client_socket)
-    print(length_of_buffer)
-    received_frame.PrintContents()
+    print(what_was_sent.PrintContents())
+    length_of_buffer, received_frame, datagram_to_pass, external_address, received_segment = LinkLayer.l2_recvfrom(client_socket, node) # added node as a parameter 04-06-2010.
+    #print(length_of_buffer)
+    #received_frame.PrintContents()
     #if received_frame.GetLength() > 0:
     #  pass # We need to deal with Layer 3 send here.
-    datagram_to_pass.PrintContents()
-    print(external_address)
+    #datagram_to_pass.PrintContents()
+    #print(external_address)
+    received_segment.PrintContents()
     client_socket.close()
     
 

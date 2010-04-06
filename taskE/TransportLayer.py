@@ -34,7 +34,6 @@ def MoreReliabilityStuff ():
   pass
   
 
-# I (Jeff) will write this by tonight.
 def l4_sendto (client_socket, destination_nid, destination_port, DVRP=None, message=None, node=None):
   # We need DVRP because we are passing it to Layer 3. Currently, this Layer 4 doesn't do 
   # anything right now. It just simply calls Layer 3.
@@ -47,11 +46,11 @@ def l4_sendto (client_socket, destination_nid, destination_port, DVRP=None, mess
   return what_was_sent
   
 
-# I (Jeff) will write this by tonight.
 def l4_recvfrom(client_socket, segment, node=None):
 # Simply return the message to the top layer of the application because this implies 
 # all the checks went through and everything is ok. When we implement the reliability, we 
 # will do checks. If the checks were not good, ask for a retransmission or something.
+# At this point in time, we simply return the segment because it is already a string.
   return segment
   
 

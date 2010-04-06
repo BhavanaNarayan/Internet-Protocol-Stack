@@ -44,7 +44,7 @@ def ComputeShortestPath (node, source_NID, destination_NID, via_NID=0):
   Returns a tuple of (via node, cost).
   """
   link_table = node.GetGlobalLinkTable()
-  ## just for the demo now. Will fix later. -- 04/05/2009
+  ## just for the demo now. Will fix later. -- 04/05/2010
   if destination_NID in link_table[source_NID]:
     return (destination_NID, 1)
   else:

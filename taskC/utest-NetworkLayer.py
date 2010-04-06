@@ -37,8 +37,13 @@ class TestNodeFunctions (unittest.TestCase):
     node.AddLink((3, 'localhost', 1))
     client_address, client_socket = LinkLayer.InitializeSocket(node)
     what_was_sent = NetworkLayer.l3_sendto(client_socket, 1, 5555, routing_table, segment, node)
-    print(what_was_sent)
+    #print(what_was_sent)
     # Receive it.
+    length_of_buffer, received_frame, datagram_to_pass, external_address, received_segment = \
+    LinkLayer.l2_recvfrom(client_socket, node)
+    
+    print(received_segment)
+    received_segment.PrintContents()
     
 
 if __name__ == '__main__':
