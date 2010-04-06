@@ -72,7 +72,7 @@ def l3_sendto (client_socket, destination_nid, destination_port, DVRP=None, segm
               
     what_was_sent = LinkLayer.l2_sendto(client_socket, dest_hostname, datagram, node)
     
-  return what_was_sent
+  return datagram
   
 
 def l3_recvfrom (client_socket, datagram, node=None):

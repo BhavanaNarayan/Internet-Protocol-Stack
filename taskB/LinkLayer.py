@@ -117,15 +117,13 @@ def l2_sendto (client_socket=None, hostname=None, datagram=None, node=None):
           # Now send it over the wire. Don't forget to encode to a byte string.
           client_socket.sendto(to_wire.encode(), dest_address)
         # Break out of the 'for' loop.
-        break
-      else:
-        print('You are not "physically" connected to that node.')
+        return frame
+      #else:
+        #print('You are not "physically" connected to that node.')
         # Break out of the 'for' loop.
-        break
+        #break
   else:
     print('No host name specified for l2_sendto.')
-    
-  return to_wire
   
 
 def l2_recvfrom (client_socket=None):
