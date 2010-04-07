@@ -1,1 +1,17 @@
-Empty file
+Design and Implementation of an IP Stack
+
+CPE 701: Internet Protocol Design
+University of Nevada, Reno - CSE
+Spring 2010
+========================================
+IPS is a simulated internet protocol stack where the physical link is 
+considered as basic UDP communications.
+
+
+Running a unit test
+==================
+example:
+
+python2.5 utest-LinkLayer.py 1
+python2.5 utest-LinkLayer.py 2
+
