@@ -39,10 +39,11 @@ class TestNodeFunctions (unittest.TestCase):
     
  
   def test_communications (self):
-    node = Node.Node(1, 'localhost', 5555)
-    node.SetMTU(1500)
-    node.AddLink((2, 'localhost', 1))
-    node.AddLink((3, 'localhost', 1))
+    #node = Node.Node(1, 'localhost', 5555)
+    #node.SetMTU(1500)
+    #node.AddLink((2, 'localhost', 1))
+    #node.AddLink((3, 'localhost', 1))
+    node = Node.ConfigInitialNetworkTopology('itc_test.txt', int(sys.argv[1]))
     client_address, client_socket = LinkLayer.InitializeSocket(node)
     datagram = NetworkLayer.Datagram()
     datagram.SetMTU(node.GetMTU())
@@ -50,14 +51,15 @@ class TestNodeFunctions (unittest.TestCase):
     datagram.SetPayload('This is a payload.\r\n')
     what_was_sent = LinkLayer.l2_sendto(client_socket, 'localhost', datagram, node)
     print(what_was_sent.PrintContents())
-    length_of_buffer, received_frame, datagram_to_pass, external_address, received_segment = LinkLayer.l2_recvfrom(client_socket, node) # added node as a parameter 04-06-2010.
-    #print(length_of_buffer)
-    #received_frame.PrintContents()
-    #if received_frame.GetLength() > 0:
-    #  pass # We need to deal with Layer 3 send here.
-    #datagram_to_pass.PrintContents()
-    #print(external_address)
-    received_segment.PrintContents()
+    while(1):
+      length_of_buffer, received_frame, datagram_to_pass, external_address, received_segment = LinkLayer.l2_recvfrom(client_socket, node) # added node as a parameter 04-06-2010.
+      #print(length_of_buffer)
+      #received_frame.PrintContents()
+      #if received_frame.GetLength() > 0:
+      #  pass # We need to deal with Layer 3 send here.
+      #datagram_to_pass.PrintContents()
+      #print(external_address)
+      received_segment.PrintContents()
     client_socket.close()
     
 
