@@ -35,6 +35,7 @@ def InitializeSocket (node=None):
   client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
   # Set any socket options pertaining to multicast.
   client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+  client_socket.setblocking(0)
   client_socket.bind(client_address)
   
   return client_address, client_socket

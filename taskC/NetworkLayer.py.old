@@ -18,12 +18,10 @@ import threading  # Higher-level threading interface.
 sys.path.append('../taskA')
 sys.path.append('../taskB')
 sys.path.append('../taskD')
-sys.path.append('../taskE')
 
 import Node
 import LinkLayer
 import RoutingProtocol
-import TransportLayer
 
 
 def ResolveNID (nid=None, node=None):
@@ -43,75 +41,37 @@ def ResolveNID (nid=None, node=None):
       return entry[1]
 
 
-def l3_sendto (client_socket, destination_nid, destination_port, DVRP=None, segment=None, node=None):
+def l3_sendto (source_nid, source_port, destination_nid, destination_port, node = None, DVRP=None, payload=None):
   """
   This function will be used in Layer 4, the Transport layer. Nowhere in this Layer 3
   is this function used--rather, this layer purely uses l2_sendto from 
   the LinkLayer module.
   """
-  #next_hop = DVRP.GetRoutingTable()[destination_nid]
-  mtu = node.GetMTU()
-  sequence_number = 1
-  total_sequence_numbers = 1
-  dest_hostname = ResolveNID(destination_nid, node)
-  #dest_hostname = socket.gethostbyname(dest_hostname)
-  
-  while len(segment) > mtu:
-    temp_segment = segment[:mtu-1]
-    datagram = Datagram(sequence_number, total_sequence_numbers, mtu, 10, 
-                        node.GetNID(), node.GetPort(), 
-                        destination_nid, destination_port, temp_segment)
-              
-    what_was_sent = LinkLayer.l2_sendto(client_socket, dest_hostname, datagram, node)
-    segment = segment[mtu:]
-    sequence_number += 1
-    total_sequence_numbers += 1
-  
-  if len(segment) > 0:
-    datagram = Datagram(sequence_number, total_sequence_numbers, mtu, 10, 
-                        node.GetNID(), node.GetPort(), 
-                        destination_nid, destination_port, len(segment), segment)
-              
-    what_was_sent = LinkLayer.l2_sendto(client_socket, dest_hostname, datagram, node)
-    
-  return datagram
+  datagram = Datagram(source_nid, source_port, destination_nid, destination_port, payload)
+  frame = Frame(node.GetNID(), node.GetPort(), destination_nid, destination_port, datagram)
+  L2_sendto(DVRP.GetRoutingTable()[destination_nid], frame) 
+  pass
   
 
-def l3_recvfrom (client_socket, datagram, node=None):
+def l3_recvfrom (datagram, node=None):
   """
   This function will be used in Layer 4, the Transport layer. Nowhere in this Layer 3
   is this function used--rather, this layer purely uses l2_recvfrom from 
   the LinkLayer module.
   """
-  # Split the headers.
-  packet = datagram.split('@@')
-  datagram_header = packet[0].split('@')
-  segment_header = packet[1].split('@')
-  
-  # Now we should have something like [Datagram, Segment].
-  # Step 1. Build a new Datagram.
-  new_datagram = Datagram(int(datagram_header[0]), int(datagram_header[1]), int(datagram_header[2]), 
-                 int(datagram_header[3]), int(datagram_header[6]), int(datagram_header[7]), 
-                 int(datagram_header[4]), int(datagram_header[5]), int(datagram_header[8]), 
-                 packet[1])
-  
-  # If it's at the destination node...
-  if int(datagram_header[4]) == node.GetNID():
-    # If total_sequence_numbers > 1 then wait for the other segments to arrive?
-    # How would we do this? Call l2_recvfrom again?
-    #segment = RTP.Segment(A BUNCH OF SEGMENT HEADERS)
-    # Reassemble packets and build the segment.
-    new_segment = TransportLayer.Segment()
-    new_segment.SetPayload(segment_header)
-    
-    # Call l4_recvfrom
-    #print(new_segment)
-    return TransportLayer.l4_recvfrom(client_socket, new_segment, node)
+  destination_nid = datagram.GetDestNID()
+  destination_port = datagram.GetDestPort()
+  if destination_nid == node.GetNID():
+    if destination_port == node.GetPort():
+      data = datagram.GetPayload()
+      l4_recvfrom(data)
+      # pass data to app to save
+    else:
+      print("Error: bad port number -- ", destination_port)
   else:
-    # Step 1. If TTL is 0, then drop, else, decrease
-    if new_datagram.GetTTL() > 0:
-      new_datagram.DecreaseTTL()
-      # TODO: Consider reassembly issues with MTU. (possibly up there ---^ Line 93). 
+    if datagram.GetTTL() >= 1:
+      datagram.DecreaseTTL()
+      l2_sendto(node,destination_nid, destination_port, datagram.GetPayload())  
 
 
 # We are not using inheritance beacuse inheritance does not meet our goals.
@@ -123,10 +83,9 @@ class Datagram (object):
     payload = Frame. The TTL will be decremented after each hop.
   """
   def __init__ (self, sequence_number=1, total_sequence_numbers=1, mtu=0, ttl=10, 
-                source_nid=1, source_port=5555, 
-                destination_nid=1, destination_port=5555, 
+                source_nid='localhost', source_port=5555, 
+                destination_nid='localhost', destination_port=5555, 
                 length=0, payload=None):
-    # You might need a key.
     self._sequence_number = sequence_number
     self._total_sequence_numbers = total_sequence_numbers
     self._mtu = mtu
@@ -197,7 +156,7 @@ class Datagram (object):
   def SetTTL (self, ttl):
     self._ttl = ttl
 
-  def DecreaseTTL (self):
+  def DecreaseTTL (self, ttl):
     self._ttl = self._ttl -1
     
   

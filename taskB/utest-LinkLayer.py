@@ -11,6 +11,7 @@
 
 
 import errno      # For errors!
+import select
 import sys        # Basic system functionality.
 import unittest   # For testing, yay!'
 import thread
@@ -48,18 +49,31 @@ class TestNodeFunctions (unittest.TestCase):
     datagram = NetworkLayer.Datagram()
     datagram.SetMTU(node.GetMTU())
     # YOU MUST PUT THE \r\n IN HERE OR IT WILL NOT WORK.
-    datagram.SetPayload('This is a payload.\r\n')
-    what_was_sent = LinkLayer.l2_sendto(client_socket, 'localhost', datagram, node)
-    print(what_was_sent.PrintContents())
+    #datagram.SetPayload('This is a payload.\r\n')
+    inputs = [client_socket, sys.stdin]
+    #print(what_was_sent.PrintContents())
     while(1):
-      length_of_buffer, received_frame, datagram_to_pass, external_address, received_segment = LinkLayer.l2_recvfrom(client_socket, node) # added node as a parameter 04-06-2010.
+      inputready,outputready,exceptready = select.select(inputs,[],[])
+      print(inputready)
+      for s in inputready:
+        if s == client_socket:
+          length_of_buffer, received_frame, datagram_to_pass, external_address, received_segment = LinkLayer.l2_recvfrom(client_socket, node) # added node as a parameter 04-06-2010.
+          print(datagram_to_pass.GetPayload())
+        #  received_segment.PrintContents()
+        elif s == sys.stdin:
+          payload = list(sys.stdin.readline())
+          payload.remove('\n')
+          payload.append('\r')
+          payload.append('\n')
+          payload = ''.join(payload)
+          datagram.SetPayload(payload)
+          what_was_sent = LinkLayer.l2_sendto(client_socket, 'localhost', datagram, node)
       #print(length_of_buffer)
       #received_frame.PrintContents()
       #if received_frame.GetLength() > 0:
       #  pass # We need to deal with Layer 3 send here.
       #datagram_to_pass.PrintContents()
       #print(external_address)
-      received_segment.PrintContents()
     client_socket.close()
     
 
