@@ -54,7 +54,6 @@ class TestNodeFunctions (unittest.TestCase):
     #print(what_was_sent.PrintContents())
     while(1):
       inputready,outputready,exceptready = select.select(inputs,[],[])
-      print(inputready)
       for s in inputready:
         if s == client_socket:
           length_of_buffer, received_frame, datagram_to_pass, external_address, received_segment = LinkLayer.l2_recvfrom(client_socket, node) # added node as a parameter 04-06-2010.
