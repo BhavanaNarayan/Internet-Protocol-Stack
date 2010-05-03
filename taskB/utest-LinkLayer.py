@@ -27,16 +27,18 @@ import NetworkLayer
 
 class TestNodeFunctions (unittest.TestCase):
   def test_InitializeSocket (self):
-    node = Node.Node(1, 'localhost', 5555)
+    #node = Node.Node(1, 'localhost', 5555)
     #print(node)
     #client_address, client_socket = LinkLayer.InitializeSocket(node)
     #print(client_socket)
     #client_socket.close()
+    pass
   
   
   def test_FrameStuff (self):
-    some_frame = LinkLayer.Frame()
+    #some_frame = LinkLayer.Frame()
     #print(some_frame)
+    pass
     
  
   def test_communications (self):
@@ -48,8 +50,13 @@ class TestNodeFunctions (unittest.TestCase):
     client_address, client_socket = LinkLayer.InitializeSocket(node)
     datagram = NetworkLayer.Datagram()
     datagram.SetMTU(node.GetMTU())
+    if int(sys.argv[1]) == 1:
+      datagram.SetDestPort(5556)
+    else:
+      datagram.SetDestPort(5555)
     # YOU MUST PUT THE \r\n IN HERE OR IT WILL NOT WORK.
     #datagram.SetPayload('This is a payload.\r\n')
+    print(datagram.GetDestPort())
     inputs = [client_socket, sys.stdin]
     #print(what_was_sent.PrintContents())
     while(1):
@@ -66,7 +73,7 @@ class TestNodeFunctions (unittest.TestCase):
           payload.append('\n')
           payload = ''.join(payload)
           datagram.SetPayload(payload)
-          what_was_sent = LinkLayer.l2_sendto(client_socket, 'localhost', datagram, node)
+          what_was_sent = LinkLayer.l2_sendto(client_socket, sys.argv[2], datagram, node)
       #print(length_of_buffer)
       #received_frame.PrintContents()
       #if received_frame.GetLength() > 0:
