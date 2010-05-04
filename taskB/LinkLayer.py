@@ -28,7 +28,6 @@ def InitializeSocket (node=None):
   hostname = node.GetHostName()
   # Resolve the IP address.
   ip = socket.gethostbyname(hostname)
-  print(ip)
   port = node.GetPort()
   
   client_address = (ip, port)
@@ -117,7 +116,6 @@ def l2_sendto (client_socket=None, hostname=None, datagram=None, node=None):
           frame.SetPayload(frame_payload)
 
           # Now send it over the wire. Don't forget to encode to a byte string.
-          print(dest_address)
           client_socket.sendto(to_wire.encode(), dest_address)
         # Break out of the 'for' loop.
         return frame
