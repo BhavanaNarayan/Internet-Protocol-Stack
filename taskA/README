@@ -1,0 +1,10 @@
+All the details pertaining to Tasks A and B are in the README in the IP/taskB/ directory.
+
+To run:
+
+python2.5 utest-Node.py <script file> <local node>
+
+example:
+
+python2.5 utest-Node.py itc_test.txt 1
+

@@ -46,7 +46,7 @@ class TestNodeFunctions (unittest.TestCase):
     #node.SetMTU(1500)
     #node.AddLink((2, 'localhost', 1))
     #node.AddLink((3, 'localhost', 1))
-    node = Node.ConfigInitialNetworkTopology('itc_test.txt', int(sys.argv[1]))
+    node = Node.ConfigInitialNetworkTopology(sys.argv[3], int(sys.argv[1]))
     client_address, client_socket = LinkLayer.InitializeSocket(node)
     datagram = NetworkLayer.Datagram()
     datagram.SetMTU(node.GetMTU())

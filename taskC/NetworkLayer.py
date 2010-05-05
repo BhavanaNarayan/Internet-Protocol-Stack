@@ -111,7 +111,7 @@ def l3_recvfrom (client_socket, datagram, node=None):
     # Step 1. If TTL is 0, then drop, else, decrease
     if new_datagram.GetTTL() > 0:
       new_datagram.DecreaseTTL()
-      # TODO: Consider reassembly issues with MTU. (possibly up there ---^ Line 93). 
+      # TODO: Consider reassembly issues with MTU. (possibly up there ---^ Line 93).          
 
 
 # We are not using inheritance beacuse inheritance does not meet our goals.
@@ -125,7 +125,7 @@ class Datagram (object):
   def __init__ (self, sequence_number=1, total_sequence_numbers=1, mtu=0, ttl=10, 
                 source_nid=1, source_port=5555, 
                 destination_nid=1, destination_port=5555, 
-                length=0, payload=None):
+                length=0, payload=None, data_type = 0):
     # You might need a key.
     self._sequence_number = sequence_number
     self._total_sequence_numbers = total_sequence_numbers
@@ -138,6 +138,7 @@ class Datagram (object):
     if payload is not None:
       self._length = len(payload)
     self._payload = payload
+    self._data_type = data_type
   
   
   def GetSequenceNumber (self):

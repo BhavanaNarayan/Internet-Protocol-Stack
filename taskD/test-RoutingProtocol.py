@@ -41,27 +41,13 @@ def Announce (link_from_node, link_to_node, link_change):
 
   
   
-# TODO(Qiping): Fix this. -- It's fixed (Yan)
-def ComputeShortestPath (node, source_NID, destination_NID, via_NID=0):
+# TODO(Qiping): Fix this.
+def ComputeShortestPath (link_table, source_NID, destination_NID, via_NID=0):
   """
   Find the shortest path from source_NID to destination_NID based on link_table. 
   Returns a tuple of (via node, cost).
   """
-##  link_table = node.GetGlobalLinkTable()
-##  ## just for the demo now. Will fix later. -- 04/05/2010
-##  if destination_NID in link_table[source_NID]:
-##    return (destination_NID, 1)
-##  else:
-##    return (link_table[source_NID][0],2)
-##  ## end	
-##  
-##  if destination_NID == source_NID:
-##    return destination_NID, 1
-##  elif ComputeShortestPath(node, link_table[source_NID][0], destination_NID, link_table[source_NID][0]) >= ComputeShortestPath(node, link_table[source_NID][1], destination_NID, link_table[source_NID][1]):
-##    return (link_table[source_NID][1], ComputeShortestPath(node, link_table[source_NID][1], destination_NID, link_table[source_NID][1]) + 1)
-##  else:
-##    return (link_table[source_NID][0], ComputeShortestPath(node, link_table[source_NID][0], destination_NID, link_table[source_NID][1]) + 1)          
-  link_table = node.GetGlobalLinkTable()
+#  link_table = node.GetGlobalLinkTable()
   routing_table_temp = {}
   for key in link_table.keys():
     if key == destination_NID:
@@ -111,7 +97,49 @@ def Converge (node, link_from_node, link_to_node, link_change=0):
       routing_table = BuildRoutingTable(link_table)
       Annouce(link_from_node, link_to_node, link_change)
 
+def printtable(table):
+##  print table
+  for key in table.keys():
+    print key, ":", table[key]
 
+def link_down(link_table, from_node, to_node):
+  temp_link = link_table[from_node]
+  new_link = []
+  for i in temp_link:
+    if i != to_node:
+        new_link.append(i)
+  link_table[from_node] = tuple(new_link)
+  temp_link = link_table[to_node]
+  new_link = []
+  for i in temp_link:
+    if i != from_node:
+        new_link.append(i)
+  link_table[to_node] = tuple(new_link)
+
+def link_up(link_table, from_node, to_node):
+  temp_link = link_table[from_node]
+  new_link = [to_node]
+  for i in temp_link:
+    if i != to_node:
+        new_link.append(i)
+  link_table[from_node] = tuple(new_link)
+  temp_link = link_table[to_node]
+  new_link = [from_node]
+  for i in temp_link:
+    if i != from_node:
+        new_link.append(i)
+  link_table[to_node] = tuple(new_link)
+
+def build_routing_table(link_table, fro):
+  routing_table_temp = {}
+  
+  for key in link_table.keys():
+    routing_table_temp[key] = ComputeShortestPath(link_table, fro, key)
+  return routing_table_temp  
+
+
+
+  
 # Distance Vector Routing Protocol
 class DVRP (object):
   """
@@ -149,7 +177,7 @@ class DVRP (object):
   def BuildRoutingTable(self, node):
     routing_table = {}
     for key in node.GetGlobalLinkTable().keys():
-      # TODO(Qiping): Fix this.  -- It's fixed (Yan)
+      # TODO(Qiping): Fix this.
       routing_table[key] = ComputeShortestPath(node, node.GetNID(), key, 0)
 
     return routing_table
@@ -165,3 +193,53 @@ class DVRP (object):
   
   def GetShortestPath (self):
     return self._shortest_path
+
+
+if __name__ == '__main__':
+  print "Routing Protocol [test mode]"
+  routing_table = {}
+  link_table = {1:(2, 4), 2:(1, 3), 3:(2, 4, 5, 6), 4:(1, 3, 5, 8, 9), 5:(3, 4, 7), 6:(3, 7, 10, 11), 7:(5, 6, 12, 13), 8:(4, 9), 9:(4, 8), 10:(6, 11), 11:(6, 10), 12:(7, 13), 13:(7, 12)}
+  home_NID = 3
+  print "Initial Link Table"
+  printtable(link_table)
+  print
+  print "Building initial Routing Table ... (done)"
+  print
+  routing_table = build_routing_table(link_table, home_NID)
+  print "Routing Table (for node %d):" % home_NID
+  printtable(routing_table)
+  quiting = 0
+  while not quiting:
+    print
+    print "Enter command: q -- quit, d -- link down, u -- link up"
+    c = raw_input(">>")
+    if c == "q":
+      quiting = 1
+    elif c == "d":
+      link_from = int(raw_input("link down from node:"))
+      link_to = int(raw_input("link down to node:"))
+      print "Link from node %d to node " % link_from, "%d is going down ..." % link_to
+      link_down(link_table, link_from, link_to)
+      print "Updating Link Table ... (done)"
+      print "New Link Table:"
+      printtable(link_table)
+      print "Converging Routing Table ... (done)"
+      routing_table = build_routing_table(link_table, home_NID)
+      print "New Routing Table:"
+      printtable(routing_table)
+    elif c == "u":
+      link_from = int(raw_input("link up from node:"))
+      link_to = int(raw_input("link up to node:"))
+      print "Link from node %d to node " % link_from, "%d is going up ..." % link_to
+      link_up(link_table, link_from, link_to)
+      print "Updating Link Table ... (done)"
+      print "New Link Table:"
+      printtable(link_table)
+      print "Converging Routing Table ... (done)"
+      routing_table = build_routing_table(link_table, home_NID)
+      print "New Routing Table:"
+      printtable(routing_table)
+  link_up(link_table, 4, 3)
+  print
+  printtable(link_table)
+  

@@ -1,0 +1,23 @@
+Design and Implementation of an IP Stack
+
+CPE 701: Internet Protocol Design
+University of Nevada, Reno - CSE
+Spring 2010
+========================================
+IPS is a simulated internet protocol stack where the physical link is
+considered as basic UDP communications.
+
+TaskE
+To get a sample of the file transfer follow instructions below.
+
+python test.py port_touse_locally target_name target_port RX (or TX)
+
+RX is file receive side, TX is file transmit side.
+
+
+Running a unit test
+==================
+example:
+
+python test.py 8000 u-04 7000 RX
+python test.py 7000 u-04 8000 TX

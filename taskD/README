@@ -1,0 +1,8 @@
+To run it, type "python test-RoutingProtocol.py". 
+
+I have hard coded the link-table. 
+After it started, you can choose a "home node". 
+It will print the link-table and routing-table. 
+Then you can press "d" or "u" to down or up a link. 
+It then update link-table and converge. 
+To try a different home node, press "q" to quit and restart.
